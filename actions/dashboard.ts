@@ -58,8 +58,27 @@ export async function getIndustryInsights() {
 
     if (!user) throw new Error("User not found");
 
-    // If user already has industry insight, return it
+    // If user already has industry insight, check if it needs updating
     if (user.industryInsight) {
+        const now = new Date();
+        const nextUpdate = new Date(user.industryInsight.nextUpdate);
+        
+        // If the nextUpdate date has passed, regenerate insights
+        if (now >= nextUpdate) {
+            const insights = await generateAIInsight(user.industry);
+            const updatedInsight = await db.industryInsight.update({
+                where: {
+                    industry: user.industry!
+                },
+                data: {
+                    ...insights,
+                    lastUpdated: new Date(),
+                    nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days later
+                }
+            });
+            return updatedInsight;
+        }
+        
         return user.industryInsight;
     }
 
@@ -70,12 +89,10 @@ export async function getIndustryInsights() {
             data: {
                 industry: user.industry,
                 ...insights,
+                lastUpdated: new Date(),
                 nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days later
             }
         });
-
-        
-        
 
         return industryInsight;
     }

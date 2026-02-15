@@ -93,7 +93,7 @@ model IndustryInsight {
   // Learning suggestions
   recommendedSkills String[]  // Skills recommended for the industry
   
-  lastUpdated   DateTime  @default(now())
+  lastUpdated   DateTime  @default(now()) @updatedAt
   nextUpdate    DateTime  // Scheduled update time
 
   @@index([industry])
