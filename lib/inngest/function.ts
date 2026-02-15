@@ -6,6 +6,21 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash-preview-09-2025"
 })
+
+// Keep Supabase database awake - runs every 6 days
+export const keepDatabaseAwake = inngest.createFunction(
+    { id: "keep-database-awake", name: "Keep Database Awake" },
+    { cron: "0 0 */6 * *" }, // Runs every 6 days at midnight
+    async ({ step }) => {
+        await step.run("Ping database", async () => {
+            // Simple query to keep the database active
+            const result = await db.$queryRaw`SELECT 1 as ping`;
+            console.log("Database ping successful:", result);
+            return result;
+        });
+    }
+);
+
 export const generateIndustryInsights = inngest.createFunction(
     { id: "generate-industry-insights", name: "Generate Industry Insights" },
     { cron: "0 0 * * 0" },
