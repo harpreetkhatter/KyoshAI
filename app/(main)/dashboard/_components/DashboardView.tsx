@@ -4,6 +4,7 @@ import { Brain, Briefcase, BriefcaseIcon, LineChart, TrendingDown, TrendingUp } 
 import React from 'react'
 import { format, formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardAction,
@@ -68,8 +69,12 @@ const DashboardView = ({ insights }: DashboardViewProps) => {
     )
     return (
         <div className='space-y-6'>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <Badge variant={"outline"}>Last updated: {lastUpdateDate}</Badge>
+                <Button size="sm" className="gap-2 h-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold transition-all shadow-[0_0_20px_-5px_var(--color-primary)] w-fit" onClick={() => window.location.href = '/onboarding'}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" /></svg>
+                    Edit Details
+                </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>

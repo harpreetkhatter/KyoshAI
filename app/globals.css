@@ -157,6 +157,10 @@
   .gradient-title {
     @apply font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-gray-400 via-gray-200 to-gray-600 pb-2 pr-2;
   }
+  .gold-border-gradient {
+    background: #000000;
+    border: 1px solid rgba(217, 174, 63, 0.2);
+  }
 }
 .hero-image-wrapper {
   perspective: 1000px;

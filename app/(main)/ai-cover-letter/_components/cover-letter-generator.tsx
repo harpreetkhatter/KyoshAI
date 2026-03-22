@@ -21,6 +21,7 @@ import useFetch from "@/hooks/use-fetch";
 import { coverLetterSchema } from "@/app/lib/schema";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { AnyARecord } from "node:dns";
 
 export default function CoverLetterGenerator() {
@@ -59,8 +60,17 @@ export default function CoverLetterGenerator() {
     }
   };
 
-  return (
-    <div className="space-y-6">
+    const loadingStates = [
+        { text: "Analyzing job description..." },
+        { text: "Matching your profile..." },
+        { text: "Drafting Cover Letter..." },
+        { text: "Perfecting tone & style..." }
+    ];
+
+    return (
+        <div className="space-y-6">
+            <MultiStepLoader loading={generating} loadingStates={loadingStates} />
+
       <Card>
         <CardHeader>
           <CardTitle>Job Details</CardTitle>

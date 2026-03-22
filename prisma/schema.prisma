@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 model User {
   id            String    @id @default(uuid())
@@ -23,25 +24,13 @@ model User {
   experience    Int?      // Years of experience
   
   // Relations
-  skills        String[]  // Array of skills
-  assessments   Assessment[]
-  resume        Resume?
-  coverLetter   CoverLetter[]
+  skills          String[]  // Array of skills
+  voiceInterviews VoiceInterview[]
+  courses         Course[]
+  resume          Resume?
+  coverLetter     CoverLetter[]
 }
 
-model Assessment {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  quizScore     Float     // Overall quiz score
-  questions     Json[]    // Array of {question, answer, userAnswer, isCorrect}
-  category      String    // "Technical", "Behavioral", etc.
-  improvementTip String?  // AI-generated improvement tip
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([userId])
-}
 
 model Resume {
   id          String    @id @default(cuid())
@@ -107,4 +96,61 @@ enum MarketOutlook{
   POSITIVE
   NEUTRAL
   NEGATIVE
+}
+
+model VoiceInterview {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  targetRole         String
+  language           String
+  transcript         String?   @db.Text
+  chatHistory        Json[]    @default([])
+  status             String    @default("PENDING") // PENDING, COMPLETED, FAILED
+  technicalScore     Float?
+  communicationScore Float?
+  confidenceScore    Float?
+  detailedFeedback   String?   @db.Text
+  strengths          Json[]    @default([])
+  improvements       Json[]    @default([])
+  keyPoints          Json[]    @default([])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Course {
+  id            String         @id @default(uuid())
+  courseId      String         @unique
+  name          String
+  description   String?        @db.Text
+  level         String
+  totalChapters Int
+  layout        Json           // Parsed syllabus/chapter JSON array
+  createdBy     String
+  user          User           @relation(fields: [createdBy], references: [id])
+  slides        CourseSlide[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([createdBy])
+}
+
+model CourseSlide {
+  id            String    @id @default(uuid())
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [courseId], onDelete: Cascade)
+  chapterId     String
+  slideIndex    Int
+  slideData     Json      // JSON structured slide elements (heading, bullet points, code)
+  narrationText String    @db.Text
+  audioUrl      String?   // Public URL to the generated MP3 in Supabase
+  captions      Json?     // Deepgram timestamp JSON
+  revealData    Json?     // Animation timeline mapping
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([courseId])
+  @@index([chapterId])
 }

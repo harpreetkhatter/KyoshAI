@@ -36,14 +36,29 @@ type OnBoardingFormData = {
 };
 interface OnBoardingFormProps {
     industries: Industry[];
+    initialData?: any;
 }
-const OnBoardingForm = ({ industries }: OnBoardingFormProps) => {
+const OnBoardingForm = ({ industries, initialData }: OnBoardingFormProps) => {
     const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
     const router = useRouter();
     const { data: updateResult, loading: updateLoading, fn: updateUserFn } = useFetch(updateUser);
-    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
-        resolver: zodResolver(onboardingSchema)
+    const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm({
+        resolver: zodResolver(onboardingSchema),
+        defaultValues: {
+            industry: initialData?.industry ? initialData.industry.split('-')[0] : "",
+            subIndustry: initialData?.industry ? initialData.industry.split('-').slice(1).join('-').replace(/-/g, " ") : "",
+            bio: initialData?.bio || "",
+            experience: initialData?.experience?.toString() || "",
+            skills: initialData?.skills?.join(", ") || "",
+        }
     });
+
+    useEffect(() => {
+        if (initialData?.industry) {
+            const ind = initialData.industry.split('-')[0];
+            setSelectedIndustry(industries.find((i) => i.id === ind) || null);
+        }
+    }, [initialData, industries]);
     const watchIndustry = watch('industry');
     const onSubmit = async (values: OnBoardingFormData) => {
         try {
@@ -82,6 +97,7 @@ const OnBoardingForm = ({ industries }: OnBoardingFormProps) => {
                         <div className='space-y-2'>
                             <Label htmlFor="industry" className="">Indutstry</Label>
                             <Select
+                                defaultValue={initialData?.industry ? initialData.industry.split('-')[0] : undefined}
                                 onValueChange={(value: string) => {
                                     setValue('industry', value);
 
@@ -112,6 +128,7 @@ const OnBoardingForm = ({ industries }: OnBoardingFormProps) => {
                             <div className='space-y-2'>
                                 <Label htmlFor="subIndustry" className="">Specialization</Label>
                                 <Select
+                                    defaultValue={initialData?.industry ? initialData.industry.split('-').slice(1).join('-').replace(/-/g, " ") : undefined}
                                     onValueChange={(value: string) => {
                                         setValue('subIndustry', value);
 

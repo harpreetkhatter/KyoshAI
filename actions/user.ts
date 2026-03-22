@@ -46,12 +46,27 @@ export async function updateUser(data: User) {
 
     // Now do the database transaction
     const result = await db.$transaction(async (tx: Prisma.TransactionClient) => {
+      let insightPayload = insights;
+
+      // If AI fails, use a fallback payload to prevent foreign key constraint violations
+      if (needsInsightCreation && !insightPayload) {
+          insightPayload = {
+              salaryRanges: [],
+              growthRate: 0,
+              demandLevel: "MEDIUM",
+              topSkills: [],
+              marketOutlook: "NEUTRAL",
+              keyTrends: [],
+              recommendedSkills: []
+          };
+      }
+
       // Create industry insight if we have the data
-      if (insights && data.industry) {
+      if (insightPayload && data.industry) {
         industryInsight = await tx.industryInsight.create({
           data: {
             industry: data.industry,
-            ...insights,
+            ...(insightPayload as any),
             nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days later
           }
         });

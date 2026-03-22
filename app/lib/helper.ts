@@ -13,3 +13,18 @@ export function entriesToMarkdown({entries,type}:any){
       .join("\n\n")
   );
 }
+
+export function certificationsToMarkdown(certifications: any[]) {
+  if (!certifications?.length) return "";
+  return (
+    `## Certifications\n\n` +
+    certifications
+      .map((cert: any) => {
+        let line = `- **${cert.name}** — ${cert.organization}`;
+        if (cert.date) line += ` (${cert.date})`;
+        if (cert.credentialId) line += ` | Credential: ${cert.credentialId}`;
+        return line;
+      })
+      .join("\n")
+  );
+}
