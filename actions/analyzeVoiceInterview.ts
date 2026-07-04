@@ -6,9 +6,21 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Prisma } from "@prisma/client";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash"
-});
+const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+
+async function generateWithFallback(prompt: string): Promise<string> {
+    for (const modelName of MODELS) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent(prompt);
+            return result.response.text().trim();
+        } catch (err: any) {
+            console.warn(`Model ${modelName} failed: ${err?.message?.slice(0, 100)}`);
+            continue;
+        }
+    }
+    throw new Error("All models failed");
+}
 
 export async function analyzeVoiceInterview(
     transcript: string,
@@ -146,8 +158,7 @@ Return ONLY a valid, raw JSON object. No markdown, no backticks, no explanation 
 
     try {
         console.log("Sending prompt to Gemini...");
-        const result = await model.generateContent(prompt);
-        let text = result.response.text();
+        let text = await generateWithFallback(prompt);
         console.log("Raw Response from Gemini:", text);
 
         // Strip out any markdown code blocks or hidden characters that Gemini might occasionally inject

@@ -5,9 +5,21 @@ import { revalidatePath } from "next/cache";
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash"
-})
+const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
+
+async function generateWithFallback(prompt: string): Promise<string> {
+  for (const modelName of MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName })
+      const result = await model.generateContent(prompt)
+      return result.response.text().trim()
+    } catch (err: any) {
+      console.warn(`Model ${modelName} failed: ${err?.message?.slice(0, 100)}`)
+      continue
+    }
+  }
+  throw new Error("All models failed")
+}
 export async function saveResume(content: any, formData?: any) {
   try {
     const { userId } = await auth();
@@ -157,9 +169,7 @@ export async function improveWithAi({ current, type, organization, title }: any)
   `;
 
   try {
-    const result = await model.generateContent(prompt)
-    const response = result.response
-    const improvedContent = response.text().trim()
+    const improvedContent = await generateWithFallback(prompt)
     return improvedContent
   } catch (err: any) {
     console.log("Error improving content:", err.message);
@@ -232,8 +242,7 @@ Rules:
 
 
   try {
-    const result = await model.generateContent(prompt);
-    let text = result.response.text().trim();
+    let text = await generateWithFallback(prompt);
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(text);
     return {
