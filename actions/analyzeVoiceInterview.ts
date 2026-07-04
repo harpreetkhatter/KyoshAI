@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
-    model: "gemma-3-27b-it"
+    model: "gemini-2.0-flash"
 });
 
 export async function analyzeVoiceInterview(
