@@ -6,7 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from 'uuid';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const MODELS = ['gemini-3.5-flash'];
+const MODELS = ['gemma-3-27b-it'];
 
 async function generateWithRetry(prompt: string, maxRetries = 3): Promise<string> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {

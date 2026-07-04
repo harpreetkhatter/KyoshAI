@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const MODELS = ['gemini-3.5-flash']
+const MODELS = ['gemma-3-27b-it']
 
 async function generateWithFallback(prompt: string): Promise<string> {
   for (const modelName of MODELS) {
