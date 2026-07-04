@@ -6,17 +6,27 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 const MODELS = ['gemma-4-31b-it']
+const atsModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
 
 // Extract JSON from model response that may contain markdown or extra text
 function extractJSON(text: string): string {
-  // Remove markdown code blocks
   text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  // Try to find a JSON object in the text
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (jsonMatch) return jsonMatch[0].trim();
-  // Try to find a JSON array
-  const arrayMatch = text.match(/\[[\s\S]*\]/);
-  if (arrayMatch) return arrayMatch[0].trim();
+  const firstBrace = text.indexOf('{');
+  const firstBracket = text.indexOf('[');
+  if (firstBrace === -1 && firstBracket === -1) {
+    return text;
+  }
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    const lastBrace = text.lastIndexOf('}');
+    if (lastBrace !== -1) {
+      return text.substring(firstBrace, lastBrace + 1);
+    }
+  } else if (firstBracket !== -1) {
+    const lastBracket = text.lastIndexOf(']');
+    if (lastBracket !== -1) {
+      return text.substring(firstBracket, lastBracket + 1);
+    }
+  }
   return text;
 }
 
@@ -270,8 +280,8 @@ Rules:
 
 
   try {
-    let text = await generateJSONWithFallback(prompt);
-    text = extractJSON(text);
+    const result = await atsModel.generateContent(prompt);
+    let text = extractJSON(result.response.text().trim());
     const parsed = JSON.parse(text);
     return {
       score: Math.min(100, Math.max(0, Math.round(parsed.score || 0))),

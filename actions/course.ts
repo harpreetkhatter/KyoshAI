@@ -11,10 +11,22 @@ const MODELS = ['gemma-4-31b-it'];
 // Extract JSON from model response that may contain markdown or extra text
 function extractJSON(text: string): string {
     text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return jsonMatch[0].trim();
-    const arrayMatch = text.match(/\[[\s\S]*\]/);
-    if (arrayMatch) return arrayMatch[0].trim();
+    const firstBrace = text.indexOf('{');
+    const firstBracket = text.indexOf('[');
+    if (firstBrace === -1 && firstBracket === -1) {
+        return text;
+    }
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+        const lastBrace = text.lastIndexOf('}');
+        if (lastBrace !== -1) {
+            return text.substring(firstBrace, lastBrace + 1);
+        }
+    } else if (firstBracket !== -1) {
+        const lastBracket = text.lastIndexOf(']');
+        if (lastBracket !== -1) {
+            return text.substring(firstBracket, lastBracket + 1);
+        }
+    }
     return text;
 }
 

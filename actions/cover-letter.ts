@@ -4,7 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const MODELS = ['gemini-3.5-flash']
+const MODELS = ['gemini-3.1-flash-lite']
 
 async function generateWithFallback(prompt: string): Promise<string> {
     for (const modelName of MODELS) {

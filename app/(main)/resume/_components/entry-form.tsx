@@ -2,13 +2,11 @@
 import { entrySchema } from '@/app/lib/schema'
 import { Button } from '@/components/ui/button'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2, PlusCircle, Sparkles, X } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { PlusCircle, X } from 'lucide-react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import useFetch from '@/hooks/use-fetch'
-import { improveWithAi } from '@/actions/resume'
 import { toast } from 'sonner'
 import { format, parse } from 'date-fns'
 
@@ -31,11 +29,6 @@ const EntryForm = ({ type, entries, onChange }: any) => {
     const current = watch("current");
     const description = watch("description");
 
-    const {
-        loading: isImproving, fn: improveWithAiFn,
-        data: improvedContent, error: improveError
-    } = useFetch(improveWithAi)
-
     const handleDelete = (index: any) => {
         //@ts-ignore
         const newEntries = entries.filter((_: any, i: number) => i !== index)
@@ -51,30 +44,6 @@ const EntryForm = ({ type, entries, onChange }: any) => {
         reset;
         setIsAdding(false)
     })
-
-    useEffect(() => {
-        if (improvedContent && !isImproving) {
-            setValue("description", improvedContent)
-            toast.success("Description improved successfully!")
-        }
-        if (improveError) {
-            const message = (improveError as any)?.message || String((improveError as any)) || "Failed to improve description"
-            toast.error(message)
-        }
-    }, [improvedContent, improveError, isImproving])
-
-    const handleImproveDescription = async () => {
-        if (!description) { toast.error("Please enter a description first"); return }
-        const organization = watch("organization");
-        const title = watch("title");
-        await improveWithAiFn({
-            current: description,
-            type: type.toLowerCase(),
-            organization: organization.toLowerCase(),
-            title: title.toLowerCase()
-        })
-    }
-
     return (
         <div className='space-y-4'>
             <div className='space-y-3'>
@@ -138,16 +107,7 @@ const EntryForm = ({ type, entries, onChange }: any) => {
                                 {...register("description")} aria-invalid={!!errors.description}
                             />
                             {errors.description && (<p className="text-sm text-red-400">{errors.description.message}</p>)}
-                            <Button type='button' variant="ghost" size="sm" onClick={handleImproveDescription}
-                                disabled={isImproving || !description}
-                                className="mt-2 text-primary hover:text-primary/80 hover:bg-primary/10 font-bold"
-                            >
-                                {isImproving ? (
-                                    <><Loader2 className='h-4 w-4 mr-2 animate-spin' /> Improving...</>
-                                ) : (
-                                    <><Sparkles className='h-4 w-4 mr-2' /> Improve with AI</>
-                                )}
-                            </Button>
+
                         </div>
                     </div>
                     <div className="p-5 border-t border-white/5 flex justify-end gap-3">
