@@ -43,7 +43,7 @@
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.2",
     "ingest": "^1.0.0",
-    "inngest": "^3.44.3",
+    "inngest": "^4.11.0",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.548.0",
     "marked": "^16.4.1",

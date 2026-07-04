@@ -4,9 +4,21 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-preview-09-2025"
-})
+const MODELS = ['gemini-3.5-flash']
+
+async function generateWithFallback(prompt: string): Promise<string> {
+    for (const modelName of MODELS) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName })
+            const result = await model.generateContent(prompt)
+            return result.response.text().trim()
+        } catch (err: any) {
+            console.warn(`Model ${modelName} failed: ${err?.message?.slice(0, 100)}`)
+            continue
+        }
+    }
+    throw new Error("All models failed")
+}
 export async function generateCoverLetter(data:any) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -44,8 +56,7 @@ export async function generateCoverLetter(data:any) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const content = result.response.text().trim();
+    const content = await generateWithFallback(prompt);
 
     const coverLetter = await db.coverLetter.create({
       data: {
