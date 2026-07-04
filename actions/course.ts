@@ -8,21 +8,33 @@ import { v4 as uuidv4 } from 'uuid';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const MODELS = ['gemma-4-31b-it'];
 
+// Extract JSON from model response that may contain markdown or extra text
+function extractJSON(text: string): string {
+    text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return jsonMatch[0].trim();
+    const arrayMatch = text.match(/\[[\s\S]*\]/);
+    if (arrayMatch) return arrayMatch[0].trim();
+    return text;
+}
+
 async function generateWithRetry(prompt: string, maxRetries = 3): Promise<string> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         for (const modelName of MODELS) {
             try {
-                const model = genAI.getGenerativeModel({ model: modelName });
+                const model = genAI.getGenerativeModel({
+                    model: modelName,
+                    generationConfig: { responseMimeType: "application/json" }
+                });
                 const result = await model.generateContent(prompt);
                 let text = result.response.text();
-                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                text = extractJSON(text);
                 return text;
             } catch (err: any) {
                 const isRateLimit = err?.message?.includes('429') || err?.message?.includes('quota');
                 console.warn(`Model ${modelName} failed (attempt ${attempt + 1}): ${err?.message?.slice(0, 100)}`);
 
                 if (isRateLimit) {
-                    // Wait before retrying on rate limit
                     const waitTime = Math.min(5000 * (attempt + 1), 30000);
                     console.log(`Rate limited, waiting ${waitTime}ms before retry...`);
                     await new Promise(r => setTimeout(r, waitTime));

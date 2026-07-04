@@ -7,6 +7,19 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 const MODELS = ['gemma-4-31b-it']
 
+// Extract JSON from model response that may contain markdown or extra text
+function extractJSON(text: string): string {
+  // Remove markdown code blocks
+  text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // Try to find a JSON object in the text
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) return jsonMatch[0].trim();
+  // Try to find a JSON array
+  const arrayMatch = text.match(/\[[\s\S]*\]/);
+  if (arrayMatch) return arrayMatch[0].trim();
+  return text;
+}
+
 async function generateWithFallback(prompt: string): Promise<string> {
   for (const modelName of MODELS) {
     try {
@@ -15,6 +28,23 @@ async function generateWithFallback(prompt: string): Promise<string> {
       return result.response.text().trim()
     } catch (err: any) {
       console.warn(`Model ${modelName} failed: ${err?.message?.slice(0, 100)}`)
+      continue
+    }
+  }
+  throw new Error("All models failed")
+}
+
+async function generateJSONWithFallback(prompt: string): Promise<string> {
+  for (const modelName of MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { responseMimeType: "application/json" }
+      })
+      const result = await model.generateContent(prompt)
+      return result.response.text().trim()
+    } catch (err: any) {
+      console.warn(`Model ${modelName} JSON mode failed: ${err?.message?.slice(0, 100)}`)
       continue
     }
   }
@@ -243,8 +273,8 @@ Rules:
 
 
   try {
-    let text = await generateWithFallback(prompt);
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    let text = await generateJSONWithFallback(prompt);
+    text = extractJSON(text);
     const parsed = JSON.parse(text);
     return {
       score: Math.min(100, Math.max(0, Math.round(parsed.score || 0))),

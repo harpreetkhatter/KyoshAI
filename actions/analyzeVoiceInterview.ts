@@ -8,10 +8,23 @@ import { Prisma } from "@prisma/client";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const MODELS = ['gemma-4-31b-it'];
 
+// Extract JSON from model response that may contain markdown or extra text
+function extractJSON(text: string): string {
+    text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return jsonMatch[0].trim();
+    const arrayMatch = text.match(/\[[\s\S]*\]/);
+    if (arrayMatch) return arrayMatch[0].trim();
+    return text;
+}
+
 async function generateWithFallback(prompt: string): Promise<string> {
     for (const modelName of MODELS) {
         try {
-            const model = genAI.getGenerativeModel({ model: modelName });
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                generationConfig: { responseMimeType: "application/json" }
+            });
             const result = await model.generateContent(prompt);
             return result.response.text().trim();
         } catch (err: any) {
@@ -162,8 +175,8 @@ Return ONLY a valid, raw JSON object. No markdown, no backticks, no explanation 
         let text = await generateWithFallback(prompt);
         console.log("Raw Response from Gemini:", text);
 
-        // Strip out any markdown code blocks or hidden characters that Gemini might occasionally inject
-        text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+        // Extract clean JSON from response (handles markdown, extra text, etc.)
+        text = extractJSON(text);
         console.log("Cleaned Text:", text);
 
         let metrics;
