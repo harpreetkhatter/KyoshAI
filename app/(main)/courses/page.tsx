@@ -11,9 +11,17 @@ export default async function CoursesPage() {
     if (userId) {
         const user = await db.user.findUnique({ where: { clerkUserId: userId } });
         if (user) {
-            courses = await db.course.findMany({
+            const rawCourses = await db.course.findMany({
                 where: { createdBy: user.id },
+                include: {
+                    _count: {
+                        select: { slides: true }
+                    }
+                },
                 orderBy: { createdAt: 'desc' }
+            });
+            courses = rawCourses.filter((course: any) => {
+                return course._count.slides === course.totalChapters * 5;
             });
         }
     }

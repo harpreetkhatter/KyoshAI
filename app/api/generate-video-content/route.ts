@@ -6,7 +6,7 @@ import { createClient as createDeepgramClient } from '@deepgram/sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const MODELS = ['gemma-4-31b-it'];
+const MODELS = ['gemini-3.1-flash-lite'];
 
 // Extract JSON from model response that may contain markdown or extra text
 function extractJSON(text: string): string {
