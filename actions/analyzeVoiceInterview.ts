@@ -21,10 +21,7 @@ function extractJSON(text: string): string {
 async function generateWithFallback(prompt: string): Promise<string> {
     for (const modelName of MODELS) {
         try {
-            const model = genAI.getGenerativeModel({
-                model: modelName,
-                generationConfig: { responseMimeType: "application/json" }
-            });
+            const model = genAI.getGenerativeModel({ model: modelName });
             const result = await model.generateContent(prompt);
             return result.response.text().trim();
         } catch (err: any) {

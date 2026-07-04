@@ -22,10 +22,7 @@ async function generateWithRetry(prompt: string, maxRetries = 3): Promise<string
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         for (const modelName of MODELS) {
             try {
-                const model = genAI.getGenerativeModel({
-                    model: modelName,
-                    generationConfig: { responseMimeType: "application/json" }
-                });
+                const model = genAI.getGenerativeModel({ model: modelName });
                 const result = await model.generateContent(prompt);
                 let text = result.response.text();
                 text = extractJSON(text);

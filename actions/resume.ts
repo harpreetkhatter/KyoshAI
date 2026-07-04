@@ -37,12 +37,9 @@ async function generateWithFallback(prompt: string): Promise<string> {
 async function generateJSONWithFallback(prompt: string): Promise<string> {
   for (const modelName of MODELS) {
     try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: { responseMimeType: "application/json" }
-      })
+      const model = genAI.getGenerativeModel({ model: modelName })
       const result = await model.generateContent(prompt)
-      return result.response.text().trim()
+      return extractJSON(result.response.text().trim())
     } catch (err: any) {
       console.warn(`Model ${modelName} JSON mode failed: ${err?.message?.slice(0, 100)}`)
       continue
