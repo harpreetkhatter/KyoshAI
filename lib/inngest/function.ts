@@ -9,8 +9,7 @@ const model = genAI.getGenerativeModel({
 
 // Keep Supabase database awake - runs every 6 days
 export const keepDatabaseAwake = inngest.createFunction(
-    { id: "keep-database-awake", name: "Keep Database Awake" },
-    { cron: "0 0 */6 * *" }, // Runs every 6 days at midnight
+    { id: "keep-database-awake", name: "Keep Database Awake", triggers: [{ cron: "0 0 */6 * *" }] }, // Runs every 6 days at midnight
     async ({ step }) => {
         await step.run("Ping database", async () => {
             // Simple query to keep the database active
@@ -22,8 +21,7 @@ export const keepDatabaseAwake = inngest.createFunction(
 );
 
 export const generateIndustryInsights = inngest.createFunction(
-    { id: "generate-industry-insights", name: "Generate Industry Insights" },
-    { cron: "0 0 * * 0" },
+    { id: "generate-industry-insights", name: "Generate Industry Insights", triggers: [{ cron: "0 0 * * 0" }] },
     async ({ step }) => {
         const industries = await step.run("Fetch industries", async () => {
             return await db.industryInsight.findMany({
